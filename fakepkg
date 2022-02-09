@@ -1,0 +1,25 @@
+#!/bin/sh
+
+cd
+test -d fakepkg || mkdir fakepkg
+cd fakepkg
+
+cmd=pacman
+
+printf "%s\n" \
+	"pkgname = ${1}" \
+	'pkgver = 0-0' \
+	"pkgdesc = fake ${1} install" \
+	'url = http://fake.com' \
+	"builddate = `date +%s`" \
+	"packager = ${USER}" \
+	'size = 0' \
+	"arch = `uname -m`" \
+	'license = unknown' > .PKGINFO
+
+for i in "${@:2}"; do
+	echo "provides = $i" >> .PKGINFO
+done
+[ -n "${*:2}" ] && sed -i "s/\(pkgdesc.*install\)/& with ${*:2} provides/" .PKGINFO
+tar -czf "${1}-0-0-`uname -m`.pkg.tar.gz" .PKGINFO
+$cmd -U "${1}-0-0-`uname -m`.pkg.tar.gz" && echo The "$1" package has been \"installed\"
